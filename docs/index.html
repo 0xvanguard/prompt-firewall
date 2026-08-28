@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prompt Injection Firewall - Protege tus LLMs</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: #0a0a0f;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+        
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px 20px;
+            background: radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0f 70%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(from 0deg, transparent, #00ff88 10%, transparent 20%);
+            animation: rotate 20s linear infinite;
+            opacity: 0.1;
+        }
+        
+        @keyframes rotate {
+            100% { transform: rotate(360deg); }
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 800px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 8px 16px;
+            background: rgba(0, 255, 136, 0.1);
+            border: 1px solid rgba(0, 255, 136, 0.3);
+            border-radius: 100px;
+            font-size: 14px;
+            color: #00ff88;
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #ffffff 0%, #00ff88 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            font-size: 1.25rem;
+            color: #888;
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .cta-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            color: #000;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 60px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #00ff88;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: #666;
+            margin-top: 4px;
+        }
+        
+        /* Features */
+        .features {
+            padding: 120px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 60px;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        
+        .feature-card {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16162a 100%);
+            border: 1px solid #2a2a4a;
+            border-radius: 16px;
+            padding: 32px;
+            transition: all 0.3s ease;
+        }
+        
+        .feature-card:hover {
+            border-color: #00ff88;
+            transform: translateY(-4px);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+        
+        .feature-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .feature-desc {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        /* How it works */
+        .how-it-works {
+            padding: 120px 20px;
+            background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
+        }
+        
+        .steps {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            max-width: 1000px;
+            margin: 0 auto;
+            flex-wrap: wrap;
+        }
+        
+        .step {
+            text-align: center;
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #00ff88, #00cc6a);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #000;
+            margin: 0 auto 16px;
+        }
+        
+        .step-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .step-desc {
+            color: #888;
+            font-size: 14px;
+        }
+        
+        /* Pricing */
+        .pricing {
+            padding: 120px 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .pricing-card {
+            background: #1a1a2e;
+            border: 1px solid #2a2a4a;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .pricing-card.popular {
+            border-color: #00ff88;
+            transform: scale(1.05);
+        }
+        
+        .pricing-card:hover {
+            border-color: #00ff88;
+        }
+        
+        .pricing-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .pricing-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #00ff88;
+            margin: 16px 0;
+        }
+        
+        .pricing-price span {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 400;
+        }
+        
+        .pricing-features {
+            list-style: none;
+            text-align: left;
+            margin: 24px 0;
+        }
+        
+        .pricing-features li {
+            padding: 8px 0;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .pricing-features li::before {
+            content: '✓';
+            color: #00ff88;
+            margin-right: 8px;
+        }
+        
+        /* CTA */
+        .cta-section {
+            padding: 120px 20px;
+            text-align: center;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0f 100%);
+        }
+        
+        .cta-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .cta-subtitle {
+            color: #888;
+            margin-bottom: 40px;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 40px 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+            border-top: 1px solid #1a1a2e;
+        }
+        
+        footer a {
+            color: #00ff88;
+            text-decoration: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats { gap: 30px; }
+            .stat-value { font-size: 2rem; }
+            .steps { flex-direction: column; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <span class="badge">🛡️ AI Security Tool</span>
+            <h1>Protege tus LLMs de Inyección de Prompts</h1>
+            <p class="subtitle">
+                Detecta y bloquea ataques de prompt injection en tiempo real. 
+                47 patrones, scoring de riesgo, API REST y Web UI incluida.
+            </p>
+            <div class="cta-group">
+                <a href="https://0xvanguard.github.io/prompt-firewall" class="btn btn-primary">
+                    ⭐ Ver en GitHub
+                </a>
+                <a href="#pricing" class="btn btn-secondary">
+                    💰 Ver Planes
+                </a>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-value">47</div>
+                    <div class="stat-label">Patrones de Detección</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">7</div>
+                    <div class="stat-label">Categorías de Ataque</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">&lt;1ms</div>
+                    <div class="stat-label">Tiempo de Respuesta</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">100%</div>
+                    <div class="stat-label">Open Source</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="features">
+        <h2 class="section-title">¿Por qué Prompt Injection Firewall?</h2>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🎯</div>
+                <h3 class="feature-title">Detección Precisa</h3>
+                <p class="feature-desc">47 patrones pre-compilados en 7 categorías. Desde role hijacking hasta ofuscación de código.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <h3 class="feature-title">Ultra Rápido</h3>
+                <p class="feature-desc">Análisis en menos de 1ms. Sin dependencias pesadas, sin modelos ML. Solo patrones optimizados.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <h3 class="feature-title">Score de Riesgo</h3>
+                <p class="feature-desc">Puntuación de 0-100 con 5 niveles: SAFE, LOW, MEDIUM, HIGH, CRITICAL. Fácil de integrar.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🧹</div>
+                <h3 class="feature-title">Sanitización</h3>
+                <p class="feature-desc">Limpia automáticamente prompts maliciosos antes de enviarlos al LLM. Mantiene la intención original.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔌</div>
+                <h3 class="feature-title">API REST</h3>
+                <p class="feature-desc">Endpoints simples para integrar en cualquier stack. FastAPI + documentación Swagger incluida.</p>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <h3 class="feature-title">Web UI</h3>
+                <p class="feature-desc">Interfaz interactiva para testing. Prueba prompts en tiempo real sin configuración.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it works -->
+    <section class="how-it-works">
+        <h2 class="section-title">¿Cómo funciona?</h2>
+        <div class="steps">
+            <div class="step">
+                <div class="step-number">1</div>
+                <h3 class="step-title">Envía tu Prompt</h3>
+                <p class="step-desc">El usuario envía un prompt a tu sistema</p>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <h3 class="step-title">Análisis en Vivo</h3>
+                <p class="step-desc">El firewall analiza 47 patrones en &lt;1ms</p>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <h3 class="step-title">Decisión</h3>
+                <p class="step-desc">Aprobar, sanitizar o bloquear según el score</p>
+            </div>
+            <div class="step">
+                <div class="step-number">4</div>
+                <h3 class="step-title">LLM Seguro</h3>
+                <p class="step-desc">Solo prompts seguros llegan a tu modelo</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing -->
+    <section class="pricing" id="pricing">
+        <h2 class="section-title">Planes</h2>
+        <div class="pricing-grid">
+            <div class="pricing-card">
+                <h3 class="pricing-name">Community</h3>
+                <div class="pricing-price">Gratis</div>
+                <ul class="pricing-features">
+                    <li>47 patrones de detección</li>
+                    <li>API REST completa</li>
+                    <li>Web UI incluida</li>
+                    <li>Soporte comunitario</li>
+                    <li>Open source MIT</li>
+                </ul>
+                <a href="https://0xvanguard.github.io/prompt-firewall" class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                    Descargar Gratis
+                </a>
+            </div>
+            <div class="pricing-card popular">
+                <span class="badge" style="position: absolute; top: -12px; right: 20px;">POPULAR</span>
+                <h3 class="pricing-name">Pro</h3>
+                <div class="pricing-price">$29<span>/mes</span></div>
+                <ul class="pricing-features">
+                    <li>Todo lo de Community</li>
+                    <li>100+ patrones avanzados</li>
+                    <li>Detección ML experimental</li>
+                    <li>Dashboard de analytics</li>
+                    <li>Soporte prioritario</li>
+                    <li>Actualizaciones mensuales</li>
+                </ul>
+                <button class="btn btn-primary" style="width: 100%; justify-content: center;">
+                    Empezar Ahora
+                </button>
+            </div>
+            <div class="pricing-card">
+                <h3 class="pricing-name">Enterprise</h3>
+                <div class="pricing-price">$199<span>/mes</span></div>
+                <ul class="pricing-features">
+                    <li>Todo lo de Pro</li>
+                    <li>Custom patterns</li>
+                    <li>On-premise deployment</li>
+                    <li>SLA 99.9%</li>
+                    <li>Soporte dedicado</li>
+                    <li>Integración personalizada</li>
+                </ul>
+                <button class="btn btn-secondary" style="width: 100%; justify-content: center;">
+                    Contactar Ventas
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2 class="cta-title">¿Listo para proteger tus LLMs?</h2>
+        <p class="cta-subtitle">Únete a los desarrolladores que ya están protegiendo sus aplicaciones de AI.</p>
+        <div class="cta-group">
+            <a href="https://0xvanguard.github.io/prompt-firewall" class="btn btn-primary">
+                🚀 Empezar Ahora - Es Gratis
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 Prompt Injection Firewall. Desarrollado con ❤️ por <a href="https://github.com/0xvanguard">0xvanguard</a></p>
+        <p style="margin-top: 8px;">
+            <a href="#">Docs</a> · 
+            <a href="#">GitHub</a> · 
+            <a href="#">Twitter</a> · 
+            <a href="#">Discord</a>
+        </p>
+    </footer>
+</body>
+</html>
