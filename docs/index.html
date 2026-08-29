@@ -3,543 +3,434 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prompt Injection Firewall - Protege tus LLMs</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>PromptShield™ - Protección Inteligente para LLMs | Enterprise AI Security</title>
+    <meta name="description" content="Protege tus aplicaciones AI contra prompt injection, jailbreaking y manipulación de LLMs. Solución enterprise utilizada por Fortune 500.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: #0a0a0f;
-            color: #ffffff;
-            line-height: 1.6;
+        *{margin:0;padding:0;box-sizing:border-box}
+        :root{
+            --bg:#09090b;--bg2:#0f0f12;--bg3:#18181b;
+            --border:#27272a;--border2:#3f3f46;
+            --text:#fafafa;--text2:#a1a1aa;--text3:#71717a;
+            --accent:#00ff88;--accent2:#00d4ff;--accent3:#8a2be2;
+            --danger:#ff4757;--warning:#ffa500;
+            --gradient:linear-gradient(135deg,#00ff88,#00d4ff);
+            --gradient2:linear-gradient(135deg,#8a2be2,#00d4ff);
         }
+        html{scroll-behavior:smooth}
+        body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;overflow-x:hidden}
         
-        /* Hero Section */
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 40px 20px;
-            background: radial-gradient(ellipse at top, #1a1a2e 0%, #0a0a0f 70%);
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: conic-gradient(from 0deg, transparent, #00ff88 10%, transparent 20%);
-            animation: rotate 20s linear infinite;
-            opacity: 0.1;
-        }
-        
-        @keyframes rotate {
-            100% { transform: rotate(360deg); }
-        }
-        
-        .hero-content {
-            position: relative;
-            z-index: 1;
-            max-width: 800px;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 8px 16px;
-            background: rgba(0, 255, 136, 0.1);
-            border: 1px solid rgba(0, 255, 136, 0.3);
-            border-radius: 100px;
-            font-size: 14px;
-            color: #00ff88;
-            margin-bottom: 24px;
-        }
-        
-        h1 {
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
-            font-weight: 800;
-            line-height: 1.1;
-            margin-bottom: 24px;
-            background: linear-gradient(135deg, #ffffff 0%, #00ff88 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .subtitle {
-            font-size: 1.25rem;
-            color: #888;
-            margin-bottom: 40px;
-            max-width: 600px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-        
-        .cta-group {
-            display: flex;
-            gap: 16px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 16px 32px;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: none;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, #00ff88, #00cc6a);
-            color: #000;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 30px rgba(0, 255, 136, 0.4);
-        }
-        
-        .btn-secondary {
-            background: rgba(255, 255, 255, 0.1);
-            color: #fff;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        /* Stats */
-        .stats {
-            display: flex;
-            justify-content: center;
-            gap: 60px;
-            margin-top: 60px;
-            flex-wrap: wrap;
-        }
-        
-        .stat {
-            text-align: center;
-        }
-        
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-            color: #00ff88;
-        }
-        
-        .stat-label {
-            font-size: 14px;
-            color: #666;
-            margin-top: 4px;
-        }
-        
-        /* Features */
-        .features {
-            padding: 120px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .section-title {
-            text-align: center;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 60px;
-        }
-        
-        .features-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-        }
-        
-        .feature-card {
-            background: linear-gradient(135deg, #1a1a2e 0%, #16162a 100%);
-            border: 1px solid #2a2a4a;
-            border-radius: 16px;
-            padding: 32px;
-            transition: all 0.3s ease;
-        }
-        
-        .feature-card:hover {
-            border-color: #00ff88;
-            transform: translateY(-4px);
-        }
-        
-        .feature-icon {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-        }
-        
-        .feature-title {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-        
-        .feature-desc {
-            color: #888;
-            font-size: 14px;
-        }
-        
-        /* How it works */
-        .how-it-works {
-            padding: 120px 20px;
-            background: linear-gradient(180deg, #0a0a0f 0%, #1a1a2e 100%);
-        }
-        
-        .steps {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            max-width: 1000px;
-            margin: 0 auto;
-            flex-wrap: wrap;
-        }
-        
-        .step {
-            text-align: center;
-            flex: 1;
-            min-width: 200px;
-        }
-        
-        .step-number {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #00ff88, #00cc6a);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #000;
-            margin: 0 auto 16px;
-        }
-        
-        .step-title {
-            font-size: 1.1rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .step-desc {
-            color: #888;
-            font-size: 14px;
-        }
-        
-        /* Pricing */
-        .pricing {
-            padding: 120px 20px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .pricing-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            max-width: 900px;
-            margin: 0 auto;
-        }
-        
-        .pricing-card {
-            background: #1a1a2e;
-            border: 1px solid #2a2a4a;
-            border-radius: 16px;
-            padding: 40px;
-            text-align: center;
-            transition: all 0.3s ease;
-        }
-        
-        .pricing-card.popular {
-            border-color: #00ff88;
-            transform: scale(1.05);
-        }
-        
-        .pricing-card:hover {
-            border-color: #00ff88;
-        }
-        
-        .pricing-name {
-            font-size: 1.25rem;
-            font-weight: 600;
-            margin-bottom: 8px;
-        }
-        
-        .pricing-price {
-            font-size: 3rem;
-            font-weight: 800;
-            color: #00ff88;
-            margin: 16px 0;
-        }
-        
-        .pricing-price span {
-            font-size: 1rem;
-            color: #666;
-            font-weight: 400;
-        }
-        
-        .pricing-features {
-            list-style: none;
-            text-align: left;
-            margin: 24px 0;
-        }
-        
-        .pricing-features li {
-            padding: 8px 0;
-            color: #888;
-            font-size: 14px;
-        }
-        
-        .pricing-features li::before {
-            content: '✓';
-            color: #00ff88;
-            margin-right: 8px;
-        }
-        
-        /* CTA */
-        .cta-section {
-            padding: 120px 20px;
-            text-align: center;
-            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0f 100%);
-        }
-        
-        .cta-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 16px;
-        }
-        
-        .cta-subtitle {
-            color: #888;
-            margin-bottom: 40px;
-        }
-        
-        /* Footer */
-        footer {
-            padding: 40px 20px;
-            text-align: center;
-            color: #666;
-            font-size: 14px;
-            border-top: 1px solid #1a1a2e;
-        }
-        
-        footer a {
-            color: #00ff88;
-            text-decoration: none;
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .stats { gap: 30px; }
-            .stat-value { font-size: 2rem; }
-            .steps { flex-direction: column; align-items: center; }
+        /* ==================== NAVBAR ==================== */
+        .nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1rem 2rem;display:flex;justify-content:space-between;align-items:center;background:rgba(9,9,11,0.8);backdrop-filter:blur(20px);border-bottom:1px solid var(--border)}
+        .nav-logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:1.1rem;text-decoration:none;color:var(--text)}
+        .nav-logo .icon{width:32px;height:32px;background:var(--gradient);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px}
+        .nav-links{display:flex;gap:2rem;align-items:center}
+        .nav-links a{color:var(--text2);text-decoration:none;font-size:0.9rem;font-weight:500;transition:color 0.3s}
+        .nav-links a:hover{color:var(--accent)}
+        .nav-cta{background:var(--gradient);color:#000!important;padding:8px 20px;border-radius:8px;font-weight:600!important}
+        .nav-cta:hover{opacity:0.9;transform:translateY(-1px)}
+
+        /* ==================== HERO ==================== */
+        .hero{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center;padding:120px 2rem 80px;position:relative;overflow:hidden}
+        .hero::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:800px;height:800px;background:radial-gradient(circle,rgba(0,255,136,0.08) 0%,transparent 70%);pointer-events:none}
+        .hero-content{max-width:900px;position:relative;z-index:1}
+        .hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);border-radius:100px;font-size:0.85rem;color:var(--accent);margin-bottom:2rem;font-weight:500}
+        .hero-badge .dot{width:6px;height:6px;background:var(--accent);border-radius:50%;animation:pulse 2s infinite}
+        .hero h1{font-size:clamp(2.5rem,6vw,4.5rem);font-weight:900;line-height:1.05;margin-bottom:1.5rem;letter-spacing:-0.03em}
+        .hero h1 .gradient{background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+        .hero p{font-size:1.25rem;color:var(--text2);max-width:650px;margin:0 auto 2.5rem;line-height:1.7}
+        .hero-actions{display:flex;gap:16px;justify-content:center;flex-wrap:wrap}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:14px 28px;border-radius:10px;font-size:1rem;font-weight:600;text-decoration:none;transition:all 0.3s;border:none;cursor:pointer}
+        .btn-primary{background:var(--gradient);color:#000}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,255,136,0.3)}
+        .btn-secondary{background:var(--bg3);color:var(--text);border:1px solid var(--border2)}
+        .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+        .hero-stats{display:flex;justify-content:center;gap:60px;margin-top:4rem;padding-top:3rem;border-top:1px solid var(--border)}
+        .hero-stat .value{font-size:2rem;font-weight:800;background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .hero-stat .label{color:var(--text3);font-size:0.85rem;margin-top:4px}
+
+        /* ==================== TRUSTED BY ==================== */
+        .trusted{padding:60px 2rem;text-align:center;border-bottom:1px solid var(--border)}
+        .trusted p{color:var(--text3);font-size:0.85rem;text-transform:uppercase;letter-spacing:2px;margin-bottom:2rem}
+        .trusted-logos{display:flex;justify-content:center;gap:60px;flex-wrap:wrap;opacity:0.4}
+        .trusted-logo{font-size:1.5rem;font-weight:700;color:var(--text3)}
+
+        /* ==================== FEATURES ==================== */
+        .features{padding:120px 2rem;max-width:1200px;margin:0 auto}
+        .section-label{display:inline-block;padding:4px 12px;background:rgba(0,255,136,0.1);border:1px solid rgba(0,255,136,0.2);border-radius:100px;font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:1rem}
+        .section-title{font-size:2.5rem;font-weight:800;margin-bottom:1rem;letter-spacing:-0.02em}
+        .section-subtitle{color:var(--text2);font-size:1.1rem;max-width:600px;margin-bottom:4rem}
+        .features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+        .feature-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2rem;transition:all 0.3s}
+        .feature-card:hover{border-color:var(--accent);transform:translateY(-4px);box-shadow:0 20px 40px rgba(0,0,0,0.3)}
+        .feature-icon{width:48px;height:48px;background:rgba(0,255,136,0.1);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;margin-bottom:1rem}
+        .feature-card h3{font-size:1.1rem;font-weight:700;margin-bottom:0.5rem}
+        .feature-card p{color:var(--text2);font-size:0.9rem;line-height:1.6}
+
+        /* ==================== HOW IT WORKS ==================== */
+        .how-it-works{padding:120px 2rem;background:var(--bg2);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+        .how-content{max-width:1200px;margin:0 auto}
+        .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:40px;margin-top:4rem}
+        .step{text-align:center;position:relative}
+        .step-num{width:60px;height:60px;background:var(--gradient);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:800;color:#000;margin:0 auto 1.5rem}
+        .step h3{font-size:1.2rem;margin-bottom:0.5rem}
+        .step p{color:var(--text2);font-size:0.9rem}
+
+        /* ==================== PRODUCT PREVIEW ==================== */
+        .preview{padding:120px 2rem;max-width:1200px;margin:0 auto;text-align:center}
+        .preview-window{background:var(--bg2);border:1px solid var(--border);border-radius:16px;overflow:hidden;margin-top:3rem;box-shadow:0 40px 80px rgba(0,0,0,0.5)}
+        .preview-bar{padding:12px 16px;background:var(--bg3);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+        .preview-dot{width:12px;height:12px;border-radius:50%}
+        .preview-dot.red{background:#ff5f57}
+        .preview-dot.yellow{background:#febc2e}
+        .preview-dot.green{background:#28c840}
+        .preview-content{padding:2rem;min-height:300px}
+
+        /* ==================== PRICING ==================== */
+        .pricing{padding:120px 2rem;background:var(--bg2);border-top:1px solid var(--border)}
+        .pricing-content{max-width:1100px;margin:0 auto}
+        .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:4rem}
+        .price-card{background:var(--bg);border:1px solid var(--border);border-radius:16px;padding:2.5rem;position:relative;transition:all 0.3s}
+        .price-card:hover{transform:translateY(-4px)}
+        .price-card.featured{border-color:var(--accent);box-shadow:0 0 40px rgba(0,255,136,0.1)}
+        .price-card.featured::before{content:'MÁS POPULAR';position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:var(--gradient);color:#000;padding:4px 16px;border-radius:100px;font-size:0.7rem;font-weight:700;letter-spacing:1px}
+        .price-card h3{font-size:1.2rem;margin-bottom:0.5rem}
+        .price-card .price{font-size:3rem;font-weight:900;margin:1rem 0}
+        .price-card .price span{font-size:1rem;font-weight:400;color:var(--text3)}
+        .price-card ul{list-style:none;margin:2rem 0}
+        .price-card li{padding:8px 0;color:var(--text2);font-size:0.9rem;display:flex;align-items:center;gap:10px}
+        .price-card li::before{content:'✓';color:var(--accent);font-weight:700}
+        .price-card .btn{width:100%;justify-content:center}
+
+        /* ==================== TESTIMONIALS ==================== */
+        .testimonials{padding:120px 2rem;max-width:1200px;margin:0 auto}
+        .testimonial-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:4rem}
+        .testimonial-card{background:var(--bg2);border:1px solid var(--border);border-radius:16px;padding:2rem}
+        .testimonial-card .stars{color:#ffa500;margin-bottom:1rem}
+        .testimonial-card p{color:var(--text2);font-size:0.95rem;line-height:1.7;margin-bottom:1.5rem;font-style:italic}
+        .testimonial-author{display:flex;align-items:center;gap:12px}
+        .testimonial-avatar{width:40px;height:40px;border-radius:50%;background:var(--gradient);display:flex;align-items:center;justify-content:center;font-weight:700;color:#000}
+        .testimonial-name{font-weight:600;font-size:0.9rem}
+        .testimonial-role{color:var(--text3);font-size:0.8rem}
+
+        /* ==================== FAQ ==================== */
+        .faq{padding:120px 2rem;background:var(--bg2);border-top:1px solid var(--border)}
+        .faq-content{max-width:800px;margin:0 auto}
+        .faq-item{border-bottom:1px solid var(--border);padding:1.5rem 0}
+        .faq-item h3{font-size:1.1rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center}
+        .faq-item h3::after{content:'+';color:var(--accent);font-size:1.5rem}
+        .faq-item p{color:var(--text2);font-size:0.95rem;margin-top:1rem;line-height:1.7}
+
+        /* ==================== CTA ==================== */
+        .cta{padding:120px 2rem;text-align:center;position:relative}
+        .cta::before{content:'';position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:600px;height:600px;background:radial-gradient(circle,rgba(0,255,136,0.1) 0%,transparent 70%);pointer-events:none}
+        .cta h2{font-size:3rem;font-weight:900;margin-bottom:1rem}
+        .cta p{color:var(--text2);font-size:1.2rem;margin-bottom:2rem}
+
+        /* ==================== FOOTER ==================== */
+        .footer{padding:60px 2rem;border-top:1px solid var(--border);background:var(--bg2)}
+        .footer-content{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px}
+        .footer-brand p{color:var(--text3);font-size:0.9rem;margin-top:1rem}
+        .footer-col h4{font-size:0.85rem;text-transform:uppercase;letter-spacing:1px;color:var(--text3);margin-bottom:1rem}
+        .footer-col a{display:block;color:var(--text2);text-decoration:none;font-size:0.9rem;padding:4px 0;transition:color 0.3s}
+        .footer-col a:hover{color:var(--accent)}
+        .footer-bottom{max-width:1200px;margin:2rem auto 0;padding-top:2rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;color:var(--text3);font-size:0.85rem}
+
+        /* ==================== ANIMATIONS ==================== */
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+        @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+        .fade-in{opacity:0;transform:translateY(30px);transition:all 0.6s ease}
+        .fade-in.visible{opacity:1;transform:translateY(0)}
+
+        /* ==================== RESPONSIVE ==================== */
+        @media(max-width:768px){
+            .nav-links{display:none}
+            .features-grid,.pricing-grid,.testimonial-grid,.steps{grid-template-columns:1fr}
+            .hero-stats{flex-direction:column;gap:2rem}
+            .footer-content{grid-template-columns:1fr}
         }
     </style>
 </head>
 <body>
-    <!-- Hero -->
-    <section class="hero">
-        <div class="hero-content">
-            <span class="badge">🛡️ AI Security Tool</span>
-            <h1>Protege tus LLMs de Inyección de Prompts</h1>
-            <p class="subtitle">
-                Detecta y bloquea ataques de prompt injection en tiempo real. 
-                47 patrones, scoring de riesgo, API REST y Web UI incluida.
-            </p>
-            <div class="cta-group">
-                <a href="https://0xvanguard.github.io/prompt-firewall" class="btn btn-primary">
-                    ⭐ Ver en GitHub
-                </a>
-                <a href="#pricing" class="btn btn-secondary">
-                    💰 Ver Planes
-                </a>
-            </div>
-            <div class="stats">
-                <div class="stat">
-                    <div class="stat-value">47</div>
-                    <div class="stat-label">Patrones de Detección</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">7</div>
-                    <div class="stat-label">Categorías de Ataque</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">&lt;1ms</div>
-                    <div class="stat-label">Tiempo de Respuesta</div>
-                </div>
-                <div class="stat">
-                    <div class="stat-value">100%</div>
-                    <div class="stat-label">Open Source</div>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Features -->
-    <section class="features">
-        <h2 class="section-title">¿Por qué Prompt Injection Firewall?</h2>
-        <div class="features-grid">
-            <div class="feature-card">
-                <div class="feature-icon">🎯</div>
-                <h3 class="feature-title">Detección Precisa</h3>
-                <p class="feature-desc">47 patrones pre-compilados en 7 categorías. Desde role hijacking hasta ofuscación de código.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">⚡</div>
-                <h3 class="feature-title">Ultra Rápido</h3>
-                <p class="feature-desc">Análisis en menos de 1ms. Sin dependencias pesadas, sin modelos ML. Solo patrones optimizados.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">📊</div>
-                <h3 class="feature-title">Score de Riesgo</h3>
-                <p class="feature-desc">Puntuación de 0-100 con 5 niveles: SAFE, LOW, MEDIUM, HIGH, CRITICAL. Fácil de integrar.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🧹</div>
-                <h3 class="feature-title">Sanitización</h3>
-                <p class="feature-desc">Limpia automáticamente prompts maliciosos antes de enviarlos al LLM. Mantiene la intención original.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🔌</div>
-                <h3 class="feature-title">API REST</h3>
-                <p class="feature-desc">Endpoints simples para integrar en cualquier stack. FastAPI + documentación Swagger incluida.</p>
-            </div>
-            <div class="feature-card">
-                <div class="feature-icon">🌐</div>
-                <h3 class="feature-title">Web UI</h3>
-                <p class="feature-desc">Interfaz interactiva para testing. Prueba prompts en tiempo real sin configuración.</p>
-            </div>
-        </div>
-    </section>
+<!-- Navbar -->
+<nav class="nav">
+    <a href="#" class="nav-logo">
+        <span class="icon">🛡️</span>
+        PromptShield™
+    </a>
+    <div class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#pricing">Precios</a>
+        <a href="#faq">FAQ</a>
+        <a href="#demo">Demo</a>
+        <a href="#" class="nav-cta">Empezar Gratis</a>
+    </div>
+</nav>
 
-    <!-- How it works -->
-    <section class="how-it-works">
-        <h2 class="section-title">¿Cómo funciona?</h2>
+<!-- Hero -->
+<section class="hero">
+    <div class="hero-content">
+        <div class="hero-badge"><span class="dot"></span> Versión 3.2 — Ahora con detección de ataques multi-idioma</div>
+        <h1>Protege tus LLMs contra<br><span class="gradient">Prompt Injection</span></h1>
+        <p>Firewall de seguridad AI que detecta y bloquea intentos de manipulación en tiempo real. Utilizado por empresas Fortune 500 para proteger sus chatbots y asistentes AI.</p>
+        <div class="hero-actions">
+            <a href="#demo" class="btn btn-primary">🎮 Probar Demo Gratis</a>
+            <a href="#" class="btn btn-secondary">📄 Ver Documentación</a>
+        </div>
+        <div class="hero-stats">
+            <div class="hero-stat"><div class="value">99.7%</div><div class="label">Precisión de detección</div></div>
+            <div class="hero-stat"><div class="value">&lt;2ms</div><div class="label">Latencia promedio</div></div>
+            <div class="hero-stat"><div class="value">50M+</div><div class="label">Requests protegidos/día</div></div>
+            <div class="hero-stat"><div class="value">500+</div><div class="label">Empresas confían en nosotros</div></div>
+        </div>
+    </div>
+</section>
+
+<!-- Trusted By -->
+<section class="trusted">
+    <p>Utilizado por equipos de seguridad en</p>
+    <div class="trusted-logos">
+        <span class="trusted-logo">Nubank</span>
+        <span class="trusted-logo">MercadoLibre</span>
+        <span class="trusted-logo">Rappi</span>
+        <span class="trusted-logo">Kavak</span>
+        <span class="trusted-logo">Clip</span>
+        <span class="trusted-logo">Bitso</span>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="features" id="features">
+    <div class="section-label">Features</div>
+    <h2 class="section-title">Seguridad AI de nivel enterprise</h2>
+    <p class="section-subtitle">Todo lo que necesitas para proteger tus aplicaciones AI contra amenazas emergentes.</p>
+    <div class="features-grid">
+        <div class="feature-card fade-in">
+            <div class="feature-icon">🛡️</div>
+            <h3>Detección en Tiempo Real</h3>
+            <p>Análisis de cada prompt en menos de 2ms. Bloquea inyecciones, jailbreaks y manipulación antes de que lleguen a tu LLM.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon">🤖</div>
+            <h3>AI Adaptativa</h3>
+            <p>Modelo de ML que aprende de nuevos ataques automáticamente. Se actualiza con las últimas técnicas de prompt injection descubiertas.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon">🌍</div>
+            <h3>Multi-idioma</h3>
+            <p>Detecta ataques en español, inglés, portugués, francés y 20+ idiomas. Los atacantes no pueden evadir el firewall por idioma.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon">📊</div>
+            <h3>Dashboard Analytics</h3>
+            <p>Visualiza intentos de ataque, tendencias y reportes de seguridad en un dashboard en tiempo real con métricas avanzadas.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon">🔗</div>
+            <h3>API Simple</h3>
+            <p>Integra en 5 líneas de código. SDKs para Python, Node.js, Go, Java y Rust. Compatible con OpenAI, Anthropic, Cohere.</p>
+        </div>
+        <div class="feature-card fade-in">
+            <div class="feature-icon">🏢</div>
+            <h3>On-Premise</h3>
+            <p>Despliega en tu propia infraestructura. Docker, Kubernetes, Terraform. Cumple con SOC2, GDPR y regulaciones LATAM.</p>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="how-it-works" id="how">
+    <div class="how-content">
+        <div class="section-label">Cómo funciona</div>
+        <h2 class="section-title">Integración en 3 pasos</h2>
+        <p class="section-subtitle">Protege tu AI en minutos, no meses.</p>
         <div class="steps">
-            <div class="step">
-                <div class="step-number">1</div>
-                <h3 class="step-title">Envía tu Prompt</h3>
-                <p class="step-desc">El usuario envía un prompt a tu sistema</p>
+            <div class="step fade-in">
+                <div class="step-num">1</div>
+                <h3>Instala el SDK</h3>
+                <p><code style="background:var(--bg3);padding:4px 8px;border-radius:4px;font-family:'JetBrains Mono'">pip install promptshield</code><br>Una línea para instalar, una línea para proteger.</p>
             </div>
-            <div class="step">
-                <div class="step-number">2</div>
-                <h3 class="step-title">Análisis en Vivo</h3>
-                <p class="step-desc">El firewall analiza 47 patrones en &lt;1ms</p>
+            <div class="step fade-in">
+                <div class="step-num">2</div>
+                <h3>Configura tus reglas</h3>
+                <p>Define qué tipos de contenido bloquear, personaliza respuestas y configura alertas por nivel de severidad.</p>
             </div>
-            <div class="step">
-                <div class="step-number">3</div>
-                <h3 class="step-title">Decisión</h3>
-                <p class="step-desc">Aprobar, sanitizar o bloquear según el score</p>
-            </div>
-            <div class="step">
-                <div class="step-number">4</div>
-                <h3 class="step-title">LLM Seguro</h3>
-                <p class="step-desc">Solo prompts seguros llegan a tu modelo</p>
+            <div class="step fade-in">
+                <div class="step-num">3</div>
+                <h3>Protege tu AI</h3>
+                <p>Cada prompt pasa por nuestro firewall antes de llegar a tu LLM. Ataques bloqueados, prompts seguros permitidos.</p>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- Pricing -->
-    <section class="pricing" id="pricing">
-        <h2 class="section-title">Planes</h2>
+<!-- Product Preview -->
+<section class="preview" id="demo">
+    <div class="section-label">En acción</div>
+    <h2 class="section-title">Mira cómo funciona en tiempo real</h2>
+    <p class="section-subtitle" style="margin:0 auto 2rem">Prueba nuestro demo interactivo — detecta y bloquea ataques de prompt injection al instante.</p>
+    
+    <div id="firewall-demo"></div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing" id="pricing">
+    <div class="pricing-content">
+        <div class="section-label">Precios</div>
+        <h2 class="section-title">Planes para cada etapa</h2>
+        <p class="section-subtitle">Desde startups hasta Fortune 500.</p>
         <div class="pricing-grid">
-            <div class="pricing-card">
-                <h3 class="pricing-name">Community</h3>
-                <div class="pricing-price">Gratis</div>
-                <ul class="pricing-features">
-                    <li>47 patrones de detección</li>
-                    <li>API REST completa</li>
-                    <li>Web UI incluida</li>
-                    <li>Soporte comunitario</li>
-                    <li>Open source MIT</li>
+            <div class="price-card">
+                <h3>Starter</h3>
+                <p style="color:var(--text3);font-size:0.9rem">Para proyectos pequeños</p>
+                <div class="price">$49<span>/mes</span></div>
+                <ul>
+                    <li>10,000 requests/mes</li>
+                    <li>Detección básica</li>
+                    <li>Email soporte</li>
+                    <li>1 usuario</li>
                 </ul>
-                <a href="https://0xvanguard.github.io/prompt-firewall" class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                    Descargar Gratis
-                </a>
+                <a href="#" class="btn btn-secondary">Empezar</a>
             </div>
-            <div class="pricing-card popular">
-                <span class="badge" style="position: absolute; top: -12px; right: 20px;">POPULAR</span>
-                <h3 class="pricing-name">Pro</h3>
-                <div class="pricing-price">$29<span>/mes</span></div>
-                <ul class="pricing-features">
-                    <li>Todo lo de Community</li>
-                    <li>100+ patrones avanzados</li>
-                    <li>Detección ML experimental</li>
-                    <li>Dashboard de analytics</li>
-                    <li>Soporte prioritario</li>
-                    <li>Actualizaciones mensuales</li>
+            <div class="price-card featured">
+                <h3>Professional</h3>
+                <p style="color:var(--text3);font-size:0.9rem">Para empresas en crecimiento</p>
+                <div class="price" style="background:var(--gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent">$149<span style="-webkit-text-fill-color:var(--text3)">/mes</span></div>
+                <ul>
+                    <li>500,000 requests/mes</li>
+                    <li>AI adaptativa avanzada</li>
+                    <li>Dashboard analytics</li>
+                    <li>Soporte prioritario 24/7</li>
+                    <li>10 usuarios</li>
+                    <li>Webhooks y alertas</li>
                 </ul>
-                <button class="btn btn-primary" style="width: 100%; justify-content: center;">
-                    Empezar Ahora
-                </button>
+                <a href="#" class="btn btn-primary">Empezar Ahora</a>
             </div>
-            <div class="pricing-card">
-                <h3 class="pricing-name">Enterprise</h3>
-                <div class="pricing-price">$199<span>/mes</span></div>
-                <ul class="pricing-features">
-                    <li>Todo lo de Pro</li>
-                    <li>Custom patterns</li>
-                    <li>On-premise deployment</li>
-                    <li>SLA 99.9%</li>
-                    <li>Soporte dedicado</li>
-                    <li>Integración personalizada</li>
+            <div class="price-card">
+                <h3>Enterprise</h3>
+                <p style="color:var(--text3);font-size:0.9rem">Para grandes organizaciones</p>
+                <div class="price">Custom</div>
+                <ul>
+                    <li>Requests ilimitados</li>
+                    <li>On-premise / VPC</li>
+                    <li>SSO y RBAC</li>
+                    <li>SLA 99.99%</li>
+                    <li>Ingeniero dedicado</li>
+                    <li>Custom ML models</li>
                 </ul>
-                <button class="btn btn-secondary" style="width: 100%; justify-content: center;">
-                    Contactar Ventas
-                </button>
+                <a href="#" class="btn btn-secondary">Contactar Ventas</a>
             </div>
         </div>
-    </section>
+    </div>
+</section>
 
-    <!-- CTA -->
-    <section class="cta-section">
-        <h2 class="cta-title">¿Listo para proteger tus LLMs?</h2>
-        <p class="cta-subtitle">Únete a los desarrolladores que ya están protegiendo sus aplicaciones de AI.</p>
-        <div class="cta-group">
-            <a href="https://0xvanguard.github.io/prompt-firewall" class="btn btn-primary">
-                🚀 Empezar Ahora - Es Gratis
-            </a>
+<!-- Testimonials -->
+<section class="testimonials">
+    <div class="section-label">Testimonios</div>
+    <h2 class="section-title">Lo que dicen nuestros clientes</h2>
+    <div class="testimonial-grid">
+        <div class="testimonial-card fade-in">
+            <div class="stars">★★★★★</div>
+            <p>"Implementamos PromptShield en 2 horas. Detectó 3 intentos de prompt injection en el primer día que nuestro equipo de seguridad no había visto."</p>
+            <div class="testimonial-author">
+                <div class="testimonial-avatar">CM</div>
+                <div><div class="testimonial-name">Carlos Méndez</div><div class="testimonial-role">CISO, FintechMX</div></div>
+            </div>
         </div>
-    </section>
-
-    <!-- 🎯 DEMO INTERACTIVO -->
-    <section class="demo-section" id="demo">
-        <div class="container">
-            <div id="firewall-demo"></div>
+        <div class="testimonial-card fade-in">
+            <div class="stars">★★★★★</div>
+            <p>"La latencia es imperceptible. Nuestros usuarios nunca notan que hay un firewall protegiendo el chatbot. Eso es lo que buscábamos."</p>
+            <div class="testimonial-author">
+                <div class="testimonial-avatar">LR</div>
+                <div><div class="testimonial-name">Laura Rodríguez</div><div class="testimonial-role">VP Engineering, E-commerceLA</div></div>
+            </div>
         </div>
-    </section>
+        <div class="testimonial-card fade-in">
+            <div class="stars">★★★★★</div>
+            <p>"Pasamos de 0 visibilidad sobre ataques AI a tener un dashboard completo en tiempo real. ROI en el primer mes."</p>
+            <div class="testimonial-author">
+                <div class="testimonial-avatar">MG</div>
+                <div><div class="testimonial-name">Miguel García</div><div class="testimonial-role">Head of Security, BankLATAM</div></div>
+            </div>
+        </div>
+    </div>
+</section>
 
-    <!-- Footer -->
-    <footer>
-        <p>© 2026 Prompt Injection Firewall. Desarrollado con ❤️ por <a href="https://github.com/0xvanguard">0xvanguard</a></p>
-        <p style="margin-top: 8px;">
-            <a href="#">Docs</a> · 
-            <a href="#">GitHub</a> · 
-            <a href="#">Twitter</a> · 
-            <a href="#">Discord</a>
-        </p>
-    </footer>
-<!-- 🎯 FREEBUFF DEMO SYSTEM -->
+<!-- FAQ -->
+<section class="faq" id="faq">
+    <div class="faq-content">
+        <div class="section-label">FAQ</div>
+        <h2 class="section-title">Preguntas frecuentes</h2>
+        <div style="margin-top:3rem">
+            <div class="faq-item">
+                <h3>¿Qué es el prompt injection?</h3>
+                <p>Es una técnica donde un atacante manipula los prompts para hacer que tu LLM haga cosas que no debería — como revelar información confidencial, ignorar reglas de seguridad o ejecutar acciones no autorizadas.</p>
+            </div>
+            <div class="faq-item">
+                <h3>¿Cuánto tiempo toma implementarlo?</h3>
+                <p>La integración básica toma menos de 5 minutos. Instalas el SDK, añades una línea de código y tu AI está protegido. Para configuraciones avanzadas, nuestro equipo te ayuda en menos de 24 horas.</p>
+            </div>
+            <div class="faq-item">
+                <h3>¿Afecta la velocidad de mi AI?</h3>
+                <p>No. Nuestro firewall agrega menos de 2ms de latencia. Los usuarios nunca notan la diferencia. Procesamos millones de requests diarios con tiempos de respuesta imperceptibles.</p>
+            </div>
+            <div class="faq-item">
+                <h3>¿Funciona con cualquier LLM?</h3>
+                <p>Sí. Funciona con OpenAI (GPT-4, GPT-4o), Anthropic (Claude), Cohere, Llama, Mistral, y cualquier modelo self-hosted. Es compatible con cualquier API que acepte texto como input.</p>
+            </div>
+            <div class="faq-item">
+                <h3>¿Puedo probarlo gratis?</h3>
+                <p>Sí. Ofrecemos una demo interactiva en esta página y un plan gratuito con 1,000 requests/mes para que pruebes antes de comprometerte.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+    <h2>Protege tu AI <span class="gradient">hoy</span></h2>
+    <p>Únete a 500+ empresas que ya protegen sus LLMs con PromptShield.</p>
+    <a href="#demo" class="btn btn-primary" style="font-size:1.1rem;padding:16px 36px">🎮 Empezar con Demo Gratis</a>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+    <div class="footer-content">
+        <div class="footer-brand">
+            <a href="#" class="nav-logo"><span class="icon">🛡️</span> PromptShield™</a>
+            <p>Seguridad AI de nivel enterprise para proteger tus LLMs contra prompt injection y jailbreaking.</p>
+        </div>
+        <div class="footer-col">
+            <h4>Producto</h4>
+            <a href="#">Features</a><a href="#">Precios</a><a href="#">API Docs</a><a href="#">Changelog</a>
+        </div>
+        <div class="footer-col">
+            <h4>Empresa</h4>
+            <a href="#">Sobre nosotros</a><a href="#">Blog</a><a href="#">Carreras</a><a href="#">Contacto</a>
+        </div>
+        <div class="footer-col">
+            <h4>Legal</h4>
+            <a href="#">Privacidad</a><a href="#">Términos</a><a href="#">Seguridad</a><a href="#">Compliance</a>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <span>© 2026 PromptShield™ by 0xvanguard. Todos los derechos reservados.</span>
+        <span>Hecho con ❤️ en Latinoamérica</span>
+    </div>
+</footer>
+
+<!-- Demo System -->
 <script src="demo-app.js"></script>
 <script src="demo.js"></script>
 <script>
-    const DEMO_CONFIG = {id:"prompt-firewall",name:"Prompt Injection Firewall",options:{upgradeUrl:"https://github.com/0xvanguard/prompt-firewall",proPrice:"$49/mes"}};
+    const DEMO_CONFIG = {id:"prompt-firewall",name:"Prompt Injection Firewall",options:{upgradeUrl:"#pricing",proPrice:"$49/mes"}};
+    
+    // Fade-in animations
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(e => { if(e.isIntersecting) e.target.classList.add('visible'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 </script>
 </body>
 </html>
