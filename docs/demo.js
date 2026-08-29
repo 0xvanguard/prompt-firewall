@@ -1,51 +1,48 @@
 // ============================================================
-// 🎯 FREEBUFF DEMO SYSTEM v1.0
-// Sistema de demo limitada por tiempo y uso
+// 🎯 FREEBUFF DEMO SYSTEM v2.0 - BETA ILIMITADA
+// Demo sin límite de uso, solo límite de tiempo
 // ============================================================
 
 const DemoSystem = {
     // Configuración
     config: {
-        maxUsage: 3,           // Usos máximos por sesión
-        timeLimit: 300,        // 5 minutos en segundos
-        projectId: '',         // Se establece por proyecto
-        projectName: '',       // Nombre del proyecto
-        upgradeUrl: '#',       // URL de upgrade
-        proPrice: '$29/mes',   // Precio Pro
+        maxUsage: 999999,      // Ilimitado en beta
+        timeLimit: 600,        // 10 minutos en segundos (más tiempo para beta)
+        projectId: '',
+        projectName: '',
+        upgradeUrl: '#',
+        proPrice: '$29/mes',
+        isBeta: true,          // Modo beta activado
     },
 
     // Estado
     state: {
         usageCount: 0,
-        timeRemaining: 300,
+        timeRemaining: 600,
         isPro: false,
         isBlocked: false,
         timerInterval: null,
+        isBeta: true,
     },
 
-    // Inicializar demo
+    // Inicializar
     init(projectId, projectName, options = {}) {
         this.config.projectId = projectId;
         this.config.projectName = projectName;
         Object.assign(this.config, options);
 
-        // Cargar estado desde localStorage
         this.loadState();
-
-        // Crear UI de demo
         this.createDemoUI();
 
-        // Iniciar timer si no es Pro
-        if (!this.state.isPro) {
+        if (!this.state.isPro && !this.state.isBlocked) {
             this.startTimer();
         }
 
-        // Auto-guardar cada 30 segundos
         setInterval(() => this.saveState(), 30000);
 
-        console.log(`🎯 Demo System initialized for ${projectName}`);
-        console.log(`   Usos: ${this.state.usageCount}/${this.config.maxUsage}`);
-        console.log(`   Tiempo: ${this.formatTime(this.state.timeRemaining)}`);
+        console.log(`🎯 Beta Demo initialized: ${projectName}`);
+        console.log(`   ⏱️ Tiempo: ${this.formatTime(this.state.timeRemaining)}`);
+        console.log(`   🔓 Modo: Beta Ilimitado`);
     },
 
     // Cargar estado
@@ -57,11 +54,11 @@ const DemoSystem = {
             this.state.usageCount = data.usageCount || 0;
             this.state.timeRemaining = data.timeRemaining || this.config.timeLimit;
             this.state.isPro = data.isPro || false;
+            this.state.isBeta = data.isBeta !== false;
 
-            // Si el tiempo se agotó, reiniciar
             if (this.state.timeRemaining <= 0 && !this.state.isPro) {
                 this.state.timeRemaining = this.config.timeLimit;
-                this.state.usageCount = 0;
+                this.state.isBlocked = false; // Beta: reinicia
             }
         }
     },
@@ -73,34 +70,21 @@ const DemoSystem = {
             usageCount: this.state.usageCount,
             timeRemaining: this.state.timeRemaining,
             isPro: this.state.isPro,
+            isBeta: this.state.isBeta,
             lastSaved: Date.now(),
         }));
     },
 
-    // Usar una función (incrementa contador)
+    // Usar función (siempre permite en beta)
     use() {
         if (this.state.isPro) return true;
         if (this.state.isBlocked) {
-            this.showBlockedMessage();
+            this.showTimeUpModal();
             return false;
         }
-        if (this.state.usageCount >= this.config.maxUsage) {
-            this.state.isBlocked = true;
-            this.showBlockedMessage();
-            this.saveState();
-            return false;
-        }
-
         this.state.usageCount++;
         this.saveState();
         this.updateUI();
-
-        console.log(`🎯 Uso ${this.state.usageCount}/${this.config.maxUsage}`);
-
-        if (this.state.usageCount >= this.config.maxUsage) {
-            setTimeout(() => this.showUpgradeModal(), 500);
-        }
-
         return true;
     },
 
@@ -117,19 +101,20 @@ const DemoSystem = {
 
             if (this.state.timeRemaining <= 0) {
                 this.state.isBlocked = true;
-                this.showBlockedMessage();
+                this.showTimeUpModal();
                 clearInterval(this.state.timerInterval);
                 this.saveState();
             }
 
-            // Advertencia a los 60 segundos
-            if (this.state.timeRemaining === 60) {
-                this.showWarning('⏰ Queda 1 minuto de demo');
+            // Advertencias
+            if (this.state.timeRemaining === 120) {
+                this.showWarning('⏰ Quedan 2 minutos de beta');
             }
-
-            // Advertencia a los 30 segundos
+            if (this.state.timeRemaining === 60) {
+                this.showWarning('⚠️ Queda 1 minuto');
+            }
             if (this.state.timeRemaining === 30) {
-                this.showWarning('⚠️ Quedan 30 segundos');
+                this.showWarning('🔥 30 segundos restantes');
             }
         }, 1000);
     },
@@ -141,9 +126,8 @@ const DemoSystem = {
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     },
 
-    // Crear UI de demo
+    // Crear UI
     createDemoUI() {
-        // Verificar si ya existe
         if (document.getElementById('demo-banner')) return;
 
         const banner = document.createElement('div');
@@ -158,7 +142,7 @@ const DemoSystem = {
                     z-index: 9999;
                     background: linear-gradient(135deg, #1a1a2e, #16213e);
                     border-bottom: 2px solid #00ff88;
-                    padding: 12px 20px;
+                    padding: 10px 20px;
                     display: flex;
                     justify-content: space-between;
                     align-items: center;
@@ -175,10 +159,20 @@ const DemoSystem = {
                     color: #000;
                     padding: 4px 12px;
                     border-radius: 20px;
-                    font-size: 12px;
+                    font-size: 11px;
                     font-weight: 700;
                     text-transform: uppercase;
                     letter-spacing: 1px;
+                    animation: pulse 2s infinite;
+                }
+                #demo-banner .demo-beta-tag {
+                    background: rgba(138,43,226,0.2);
+                    color: #8a2be2;
+                    padding: 4px 10px;
+                    border-radius: 20px;
+                    font-size: 10px;
+                    font-weight: 700;
+                    border: 1px solid rgba(138,43,226,0.3);
                 }
                 #demo-banner .demo-timer {
                     color: #00ff88;
@@ -188,7 +182,7 @@ const DemoSystem = {
                 }
                 #demo-banner .demo-usage {
                     color: #888;
-                    font-size: 13px;
+                    font-size: 12px;
                 }
                 #demo-banner .demo-usage span {
                     color: #00ff88;
@@ -197,15 +191,15 @@ const DemoSystem = {
                 #demo-banner .demo-right {
                     display: flex;
                     align-items: center;
-                    gap: 15px;
+                    gap: 12px;
                 }
                 #demo-banner .demo-upgrade {
                     background: linear-gradient(135deg, #ff4757, #ff6b81);
                     color: #fff;
-                    padding: 8px 20px;
+                    padding: 6px 16px;
                     border-radius: 8px;
                     border: none;
-                    font-size: 14px;
+                    font-size: 12px;
                     font-weight: 600;
                     cursor: pointer;
                     transition: all 0.3s;
@@ -219,40 +213,34 @@ const DemoSystem = {
                     background: transparent;
                     border: 1px solid #444;
                     color: #888;
-                    width: 30px;
-                    height: 30px;
+                    width: 26px;
+                    height: 26px;
                     border-radius: 50%;
                     cursor: pointer;
-                    font-size: 16px;
+                    font-size: 14px;
                     transition: all 0.3s;
                 }
                 #demo-banner .demo-close:hover {
                     border-color: #ff4757;
                     color: #ff4757;
                 }
-                #demo-banner.warning {
-                    border-bottom-color: #ffa500;
-                    animation: pulse-warning 1s infinite;
-                }
-                #demo-banner.blocked {
-                    border-bottom-color: #ff4757;
-                    background: linear-gradient(135deg, #2e1a1a, #1e1621);
-                }
-                @keyframes pulse-warning {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.7; }
-                }
-                /* Ajustar contenido para hacer espacio al banner */
-                body { padding-top: 60px !important; }
+                #demo-banner.warning { border-bottom-color: #ffa500; }
+                #demo-banner.warning .demo-timer { color: #ffa500; }
+                #demo-banner.critical { border-bottom-color: #ff4757; animation: pulse-danger 0.5s infinite; }
+                #demo-banner.critical .demo-timer { color: #ff4757; }
+                body { padding-top: 50px !important; }
+                @keyframes pulse { 0%,100%{opacity:1}50%{opacity:0.7} }
+                @keyframes pulse-danger { 0%,100%{opacity:1}50%{opacity:0.5} }
             </style>
             <div class="demo-left">
                 <span class="demo-badge">🎯 DEMO</span>
+                <span class="demo-beta-tag">BETA</span>
                 <span class="demo-timer" id="demo-timer">${this.formatTime(this.state.timeRemaining)}</span>
-                <span class="demo-usage">Usos: <span id="demo-usage-count">${this.state.usageCount}</span>/${this.config.maxUsage}</span>
+                <span class="demo-usage">Usos: <span id="demo-usage-count">${this.state.usageCount}</span> (ilimitados)</span>
             </div>
             <div class="demo-right">
                 <a href="${this.config.upgradeUrl}" class="demo-upgrade">
-                    ⭐ Actualizar a Pro (${this.config.proPrice})
+                    ⭐ Pro (${this.config.proPrice})
                 </a>
                 <button class="demo-close" onclick="DemoSystem.dismissBanner()" title="Ocultar">×</button>
             </div>
@@ -274,15 +262,17 @@ const DemoSystem = {
         if (banner) {
             banner.className = '';
             if (this.state.isBlocked) {
-                banner.classList.add('blocked');
+                banner.classList.add('critical');
             } else if (this.state.timeRemaining <= 60) {
+                banner.classList.add('warning');
+            } else if (this.state.timeRemaining <= 120) {
                 banner.classList.add('warning');
             }
         }
     },
 
-    // Mostrar mensaje de bloqueo
-    showBlockedMessage() {
+    // Modal tiempo agotado
+    showTimeUpModal() {
         const overlay = document.createElement('div');
         overlay.id = 'demo-blocked-overlay';
         overlay.innerHTML = `
@@ -291,7 +281,7 @@ const DemoSystem = {
                     position: fixed;
                     inset: 0;
                     z-index: 10000;
-                    background: rgba(0,0,0,0.9);
+                    background: rgba(0,0,0,0.92);
                     display: flex;
                     align-items: center;
                     justify-content: center;
@@ -299,7 +289,7 @@ const DemoSystem = {
                 }
                 #demo-blocked-overlay .blocked-card {
                     background: linear-gradient(135deg, #1a1a2e, #16213e);
-                    border: 2px solid #ff4757;
+                    border: 2px solid #8a2be2;
                     border-radius: 20px;
                     padding: 3rem;
                     text-align: center;
@@ -307,43 +297,39 @@ const DemoSystem = {
                     width: 90%;
                     animation: slideUp 0.3s ease;
                 }
-                #demo-blocked-overlay .blocked-icon {
-                    font-size: 5rem;
-                    margin-bottom: 1rem;
-                }
                 #demo-blocked-overlay h2 {
-                    color: #ff4757;
+                    color: #8a2be2;
                     font-size: 1.8rem;
-                    margin-bottom: 0.5rem;
+                    margin: 1rem 0 0.5rem;
+                }
+                #demo-blocked-overlay .beta-tag {
+                    display: inline-block;
+                    background: rgba(138,43,226,0.2);
+                    color: #8a2be2;
+                    padding: 4px 12px;
+                    border-radius: 20px;
+                    font-size: 12px;
+                    font-weight: 700;
+                    border: 1px solid rgba(138,43,226,0.3);
                 }
                 #demo-blocked-overlay p {
                     color: #888;
-                    margin-bottom: 2rem;
+                    margin: 1rem 0 2rem;
                     line-height: 1.6;
-                }
-                #demo-blocked-overlay .blocked-features {
-                    text-align: left;
-                    margin-bottom: 2rem;
-                }
-                #demo-blocked-overlay .blocked-feature {
-                    color: #00ff88;
-                    padding: 8px 0;
-                    font-size: 14px;
-                }
-                #demo-blocked-overlay .blocked-feature::before {
-                    content: '✅ ';
                 }
                 #demo-blocked-overlay .upgrade-btn {
                     background: linear-gradient(135deg, #00ff88, #00aaff);
                     color: #000;
-                    padding: 15px 40px;
+                    padding: 14px 36px;
                     border-radius: 12px;
                     border: none;
-                    font-size: 16px;
+                    font-size: 15px;
                     font-weight: 700;
                     cursor: pointer;
                     transition: all 0.3s;
                     margin: 5px;
+                    text-decoration: none;
+                    display: inline-block;
                 }
                 #demo-blocked-overlay .upgrade-btn:hover {
                     transform: translateY(-3px);
@@ -352,40 +338,51 @@ const DemoSystem = {
                 #demo-blocked-overlay .reset-btn {
                     background: transparent;
                     color: #888;
-                    padding: 15px 30px;
+                    padding: 14px 28px;
                     border-radius: 12px;
                     border: 1px solid #444;
-                    font-size: 14px;
+                    font-size: 13px;
                     cursor: pointer;
                     transition: all 0.3s;
                     margin: 5px;
                 }
                 #demo-blocked-overlay .reset-btn:hover {
-                    border-color: #00ff88;
+                    border-color: #8a2be2;
+                    color: #8a2be2;
+                }
+                #demo-blocked-overlay .features {
+                    text-align: left;
+                    margin: 1.5rem 0;
+                    padding: 1rem;
+                    background: rgba(0,0,0,0.3);
+                    border-radius: 10px;
+                }
+                #demo-blocked-overlay .feature {
                     color: #00ff88;
+                    padding: 6px 0;
+                    font-size: 13px;
                 }
-                @keyframes slideUp {
-                    from { transform: translateY(20px); opacity: 0; }
-                    to { transform: translateY(0); opacity: 1; }
-                }
+                @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
             </style>
             <div class="blocked-card">
-                <div class="blocked-icon">🔒</div>
-                <h2>Demo Agotada</h2>
-                <p>Has utilizado todos los usos gratuitos de esta demo.<br>
-                   Desbloquea el acceso completo con Pro.</p>
-                <div class="blocked-features">
-                    <div class="blocked-feature">Usos ilimitados</div>
-                    <div class="blocked-feature">Sin límite de tiempo</div>
-                    <div class="blocked-feature">Soporte prioritario</div>
-                    <div class="blocked-feature">API completa</div>
+                <span class="beta-tag">BETA</span>
+                <div style="font-size:4rem;margin-top:1rem;">⏱️</div>
+                <h2>Tiempo de Beta Agotado</h2>
+                <p>Tu sesión beta de 10 minutos ha terminado.<br>
+                   Desbloquea acceso completo con Pro.</p>
+                <div class="features">
+                    <div class="feature">✅ Usos ilimitados</div>
+                    <div class="feature">✅ Sin límite de tiempo</div>
+                    <div class="feature">✅ API completa</div>
+                    <div class="feature">✅ Soporte prioritario</div>
+                    <div class="feature">✅ Actualizaciones de por vida</div>
                 </div>
                 <a href="${this.config.upgradeUrl}" class="upgrade-btn">
                     ⭐ Actualizar a Pro (${this.config.proPrice})
                 </a>
                 <br><br>
                 <button class="reset-btn" onclick="DemoSystem.resetDemo()">
-                    🔄 Reiniciar demo (borrar datos)
+                    🔄 Reiniciar beta (10 min más)
                 </button>
             </div>
         `;
@@ -393,31 +390,18 @@ const DemoSystem = {
         document.body.appendChild(overlay);
     },
 
-    // Mostrar advertencia
+    // Advertencia
     showWarning(msg) {
         const toast = document.createElement('div');
         toast.style.cssText = `
-            position: fixed;
-            top: 70px;
-            right: 20px;
-            background: linear-gradient(135deg, #ffa500, #ff8c00);
-            color: #000;
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-weight: 600;
-            z-index: 10001;
-            animation: slideIn 0.3s ease;
-            box-shadow: 0 4px 15px rgba(255,165,0,0.4);
+            position:fixed;top:60px;right:20px;z-index:10001;
+            background:linear-gradient(135deg,#8a2be2,#6a1fb0);color:#fff;
+            padding:12px 20px;border-radius:10px;font-weight:600;
+            animation:slideIn 0.3s ease;box-shadow:0 4px 15px rgba(138,43,226,0.4);
         `;
         toast.textContent = msg;
         document.body.appendChild(toast);
-
         setTimeout(() => toast.remove(), 3000);
-    },
-
-    // Mostrar modal de upgrade
-    showUpgradeModal() {
-        this.showWarning('⚠️ Has alcanzado el límite de usos gratuitos');
     },
 
     // Ocultar banner
@@ -438,36 +422,28 @@ const DemoSystem = {
         this.state.timeRemaining = this.config.timeLimit;
         this.state.isBlocked = false;
 
-        // Remover overlay
         const overlay = document.getElementById('demo-blocked-overlay');
         if (overlay) overlay.remove();
 
-        // Recrear UI
         this.createDemoUI();
         this.startTimer();
-
-        this.showWarning('🔄 Demo reiniciada - 3 usos y 5 minutos');
+        this.showWarning('🔄 Beta reiniciada - 10 minutos');
     },
 
-    // Activar Pro (para testing)
+    // Activar Pro
     activatePro() {
         this.state.isPro = true;
         this.saveState();
-
-        // Remover banner
         const banner = document.getElementById('demo-banner');
         if (banner) banner.remove();
-
-        // Remover overlay
         const overlay = document.getElementById('demo-blocked-overlay');
         if (overlay) overlay.remove();
-
         clearInterval(this.state.timerInterval);
-        console.log('🎉 Pro activado - acceso completo');
+        console.log('🎉 Pro activado');
     },
 };
 
-// Auto-inicializar si hay configuración
+// Auto-inicializar
 if (typeof DEMO_CONFIG !== 'undefined') {
     document.addEventListener('DOMContentLoaded', () => {
         DemoSystem.init(DEMO_CONFIG.id, DEMO_CONFIG.name, DEMO_CONFIG.options);
